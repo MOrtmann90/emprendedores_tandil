@@ -1,0 +1,263 @@
+---
+import Spinner from "./Spinner.astro";
+import "../../node_modules/leaflet/dist/leaflet.css";
+---
+
+<div id="map" class="h-full w-full relative">
+  <Spinner />
+
+  <button
+    id="resetBtn"
+    class="flex items-center size-[30px] justify-center text-left absolute top-20 left-1 z-[998] ring-2 hover:bg-gray-100 bg-white m-2 ring-neutral-500/30 rounded-sm font-dmSans"
+    ><svg
+      class="size-4"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      ><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+      <path
+        d="M48.5 224L40 224c-13.3 0-24-10.7-24-24L16 72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8L48.5 224z"
+      ></path></svg
+    ></button
+  >
+  <div
+    id="layer-control"
+    class="absolute top-20 right-2 z-[998] bg-white px-2 py-1 rounded-md shadow-md"
+  >
+    <span class="flex items-center justify-between peer">
+      <h4 class="text-md font-poppins">Categorías</h4>
+
+      <label for="legend-toggle" class="text-mainColor cursor-pointer"
+        ><input
+          id="legend-toggle"
+          class="peer input hidden"
+          type="checkbox"
+        /><i
+          class="fa-solid fa-angle-up peer-checked:inline-block hidden size-4 m-1"
+        ></i>
+        <i
+          class="inline-block fa-solid fa-angle-down size-4 peer-checked:hidden m-1"
+        ></i></label
+      >
+    </span>
+
+    <div id="layers" class="hidden transition">
+      <hr class="my-2" />
+      <!-- DYNAMIC LAYERS -->
+    </div>
+  </div>
+</div>
+
+<style is:inline>
+  /* MAP STYLES */
+  span > p,
+  h6 {
+    margin: 0 !important;
+  }
+
+  div > span {
+    margin-block: 0.5rem;
+  }
+
+  h6 {
+    color: #acacac;
+  }
+
+  .popup > a {
+    margin-block: 0.5rem;
+  }
+
+  .icon-circle {
+    background-color: #fff;
+    width: 1.8rem;
+    aspect-ratio: 1/1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #333;
+    border-radius: 50%;
+  }
+
+  .icon-circle i {
+    font-size: 1rem;
+    color: #262626;
+  }
+</style>
+
+<script>
+  import L from "leaflet";
+  import { categorias } from "../data/categorias";
+
+  const mapContainer = document.getElementById("map");
+
+  const centerCoords = [-37.328738907353944, -59.13695327578395];
+  let zoom = 11;
+
+  let argenmapGris = new L.tileLayer(
+    "https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png",
+    {
+      minZoom: 1,
+      maxZoom: 20,
+    }
+  );
+
+  let osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  });
+
+  // MAP DEFINITION
+  let map = new L.map(mapContainer, {
+    center: centerCoords,
+    zoom: zoom,
+    zoomControl: true,
+    minZoom: 10,
+    maxBounds: [
+      [-36.8473, -59.7848],
+      [-37.8162, -58.6101],
+    ],
+    layers: [argenmapGris],
+  });
+
+  var baseLayers = {
+    ArgenMap: argenmapGris,
+    OpenStreetMap: osm,
+  };
+
+  L.control.layers(baseLayers, null, { position: "topright" }).addTo(map);
+
+  // LAYER FUNTIONALITY DEFINITION
+  function onEachFeature(feature, layer) {
+    // PRINT EMPRENDEDOR ID ON CONSOLE
+    layer.on("click", function (e) {
+      console.log(feature.properties.id);
+    });
+
+    // POP UP
+    if (feature.properties) {
+      layer.bindPopup(`<div class="popup font-dmSans flex flex-col min-w-48 max-w-52">
+
+      ${feature.properties.img ? `<img src="img/${feature.properties.img}.webp" alt="Imagen del emprendimiento" >` : ""}
+
+      ${feature.properties.nombre ? `<h4 class="text-xl text-mainColor capitalize mt-2">${feature.properties.nombre}</h4><hr class="my-1">` : ""}
+
+      ${feature.properties.actividad ? `<p class="capitalize text-mainColor">${feature.properties.actividad}</p>` : ""}
+
+      <span><h6>Dirección</h6><p>${feature.properties.direccion}</p></span>
+
+      ${feature.properties.telefono && `<span><h6>Teléfono</h6><p> ${feature.properties.telefono}</p></span>`}
+
+      ${feature.properties.instagram ? `<a href="https://www.instagram.com/${feature.properties.instagram}"target="_blank">Instagram</a>` : ""}
+
+      ${feature.properties.facebook ? `<a href="https://www.facebook.com/${feature.properties.facebook}"target="_blank">Facebook</a>` : ""}
+
+      ${feature.properties.tiktok ? `<a href="https://www.tiktok.com/${feature.properties.tiktok}"target="_blank">Tiktok</a>` : ""}
+
+      ${feature.properties.email ? `<a href="mailto:${feature.properties.email}>${feature.properties.email}</a>` : ""}
+
+      ${feature.properties.web ? `<a href="${feature.properties.web} "target="_blank">Visitar sitio web</a>` : ""}
+    </div>`);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async function () {
+    const spinner = document.getElementById("spinner");
+    spinner.style.display = "flex";
+
+    let capas = {};
+
+    const url =
+      "https://mapa.tandil.gov.ar/geoserver/datos_publicos/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=datos_publicos%3Aemprendedores&outputFormat=application%2Fjson";
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      const emprendedores = data.features;
+
+      categorias.forEach((categoria) => {
+        let puntos = L.geoJSON(emprendedores, {
+          pointToLayer: function (feature, latlng) {
+            const categoriaColor = `#${categoria.color}`;
+            const iconColor =
+              categoria.idTag === "servicios" ? "#6d6d6d" : "#FFFFFF";
+
+            const actividadIcon = L.divIcon({
+              className: "my-div-icon",
+              html: `<div class="icon-circle" style="background-color: ${categoriaColor};">
+                     <i class="fa-solid fa-store" style="color: ${iconColor};"></i>
+                   </div>`,
+            });
+            return L.marker(latlng, { icon: actividadIcon });
+          },
+          filter: function (feature) {
+            return feature.properties.rubro === categoria.idTag;
+          },
+          onEachFeature: onEachFeature,
+        });
+
+        capas[categoria.title] = puntos;
+        puntos.addTo(map);
+
+        // Controles para cada capa
+        const layerControl = document.getElementById("layers");
+        const layerItem = document.createElement("div");
+        layerItem.innerHTML = `
+        <div class="flex items-center mb-1 w-60">
+          <label class="cursor-pointer flex items-center group has-[:checked]:no-underline line-through has-[:checked]:text-black text-gray-400" for="layer-${categoria.idTag}">
+            <input class="hidden peer" type="checkbox" id="layer-${categoria.idTag}" checked>
+            <div class="size-6 mr-2 rounded-sm peer-checked:opacity-100 opacity-20" style="background-color: #${categoria.color}"></div>
+            ${categoria.title}
+          </label>
+        </div>`;
+        layerControl.appendChild(layerItem);
+
+        // Control de visibilidad de capas
+        document
+          .getElementById(`layer-${categoria.idTag}`)
+          .addEventListener("change", function (e) {
+            const target = e.target as HTMLInputElement;
+            if (target.checked) {
+              map.addLayer(puntos);
+            } else {
+              map.removeLayer(puntos);
+            }
+          });
+      });
+
+      // Oculta spinner al cargar
+      map.on("load", function () {
+        spinner.style.display = "none";
+      });
+
+      // Verificación adicional de carga de capas
+      if (map.hasLayer) {
+        spinner.style.display = "none";
+      }
+    } catch (error) {
+      console.error("Error al cargar los datos:", error);
+      spinner.style.display = "none"; // Oculta spinner en caso de error
+    }
+  });
+
+  // RESET VIEW BUTTON
+  const resetBtn = document.querySelector("#resetBtn");
+  resetBtn.addEventListener("click", () => {
+    map.setView(centerCoords, zoom);
+  });
+</script>
+
+<script>
+  // TOOGLE LAYERS CONTROL
+  const layersDiv = document.getElementById("layers");
+  const toggleInput = document.getElementById(
+    "legend-toggle"
+  ) as HTMLInputElement;
+
+  toggleInput.addEventListener("change", () => {
+    if (toggleInput.checked) {
+      layersDiv.classList.remove("hidden");
+    } else {
+      layersDiv.classList.add("hidden");
+    }
+  });
+</script>

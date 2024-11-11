@@ -1,0 +1,39 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+import "@fontsource/poppins";
+
+const description =
+  "Mapa de emprendedores de la ciudad de Tandil | Municipio de Tandil";
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth font-poppins">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <!--FONT AWESOME-->
+    <script
+      src="https://kit.fontawesome.com/e1d1f4094f.js"
+      crossorigin="anonymous"></script>
+  </head>
+  <body class="grid grid-rows-[auto_1fr_auto] min-h-svh">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+</style>
