@@ -2,7 +2,7 @@ export const categorias = [
   {
     id: 1,
     color: "cc5f11",
-    idTag: "Agroindustria (lácteos, quesos, vinos, chacinados, otros)",
+    idTag: "Agroindustria",
     title: "Agroindustria",
   },
   { id: 2, color: "1bda84", idTag: "Apicultura", title: "Apicultura" },
@@ -53,7 +53,7 @@ export const categorias = [
     id: 11,
     color: "d638c1",
     idTag:
-      "Producción vegetal (floricultura, fruticultura, horticultura, viveros, otros)",
+      "Producción vegetal",
     title: "Prod. Vegetal",
   },
   { id: 12, color: "6d6d6d", idTag: "Servicios", title: "Servicios" },
